@@ -1,16 +1,6 @@
-from storage import Storage
+from sql_alchemy_storage import SQLAlchemyStorage
 
 import sqlite3
-
-_SQL_STORAGE = None
-_SQLITE_TYPE_MAP = {
-                    "list":    "TABLE",
-                    "dict":    "TABLE",
-                    "int":     "INTEGER",
-                    "float":   "DECIMAL",
-                    "string":  "VARCHAR",
-                    "unicode": "VARCHAR"
-                    }
 
 class SQLiteContainer(object):
     def __init__(self, measurement, config={}):
@@ -32,12 +22,7 @@ class SQLiteContainer(object):
     def check():
         pass
 
-class SQLiteStorage(Storage):
-    def __new__(self, **args):
-        if not _SQL_STORAGE:
-            _SQL_STORAGE = super(SQLiteStorage, self).__new__(**args)
-        return _SQL_STORAGE
-
+class SQLiteStorage(SQLAlchemyStorage):
     def __init__(self, config={}):
         self.config = config
         self.container = {}

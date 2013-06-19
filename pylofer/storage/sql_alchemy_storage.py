@@ -1,4 +1,8 @@
 from storage import Storage
 
+from sqlalchemy import create_engine
+
 class SQLAlchemyStorage(Storage):
-    pass
+    def __init__(self, config={}, data=None):
+        self.db_uri = getattr(config, "storage.uri")
+        self.engine = create_engine(getattr)

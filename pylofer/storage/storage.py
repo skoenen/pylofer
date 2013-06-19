@@ -1,3 +1,5 @@
+_STORAGE = None
+
 class Container(object):
     def __init__(self, namespace="", config={}):
         self.config = config
@@ -7,6 +9,11 @@ class Container(object):
         raise NotImplementedError("Do not know how to save.")
 
 class Storage(object):
+    def __new__(self, **args):
+        if not _STORAGE:
+            _STORAGE = super(self.__class__, self).__init__(**args)
+        return _STORAGE
+
     def __init__(self):
         raise NotImplementedError("No instance of this class allowed.")
 
