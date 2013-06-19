@@ -2,8 +2,6 @@ import socket
 import threading
 import json
 
-from storage import FileStorage
-
 __all__ = ['Measurement']
 
 class Measurement(object):
@@ -13,17 +11,16 @@ class Measurement(object):
             self._merge_with(obj)
         else:
             self.data = {}
+            self.typ = "GENERIC"
 
         self.config = config
-        self.storage = getattr(self.config, "storage", None)
-        if not self.storage:
-            self.storage = FileStorage()
 
     def _merge_with(self, obj):
-        self.data = obj
+        if "typ" in obj:
+            self.typ = getattr(obj, "typ", "GENERIC")
+            del obj["typ"]
 
-    def save(self):
-        self.storage.save(self)
+        self.data = obj
 
     def __str__(self):
         return json.dumps(self.data)
@@ -41,3 +38,7 @@ class Measurement(object):
         if key in self.data:
             del(self.data[key])
 
+class TimingMeasurement(Measurement):
+    def __init__(self, config={}, data=None):
+        super(TimingMeasurement, self).__init__(config, data)
+        self.typ = "TIMING"
