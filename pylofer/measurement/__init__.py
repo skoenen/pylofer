@@ -1,5 +1,11 @@
-from measurement import Measurement
-from measure_client import MeasureClient
-from measure_server import MeasureServer
+from pylofer.measurement.measurement import Measurement
+from pylofer.measurement.measurement import Measure
+from pylofer.measurement.aspect import *
 
-__all__ = ['Measurement', 'MeasureClient', 'MeasureServer']
+__all__ = [
+        'Measurement',
+        'Measure',
+        'MeasureAspect',
+        'TimingAspect',
+        'MemoryAspect',
+        'CallAspect']

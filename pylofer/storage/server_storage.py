@@ -1,11 +1,25 @@
-import socket
-import threading
+from pylofer.storage import Storage
+from SocketServer import UDPServer, UnixDatagramServer
 
-from measurement import Measurement
 
-__all__ = ['MeasureServer']
+__all__ = ['MeasureClient', 'MeasureServer']
 
-class MeasureServer(object):
+class ServerStorage(Storage):
+    pass
+
+class ServerStorageClient(object):
+    def __init__(self, config={}):
+        self.port = getattr(config, "port", 60000)
+        self.host = getattr(config, "host", "")
+
+        self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self.sock.connect((self.host, self.port))
+
+    def send(self, measure):
+        self.sock.send(str(measure))
+
+
+class ServerStorageServer(object):
     allowed_hosts = ["127.0.0.1", "::1"]
 
     def __init__(self, config={}):
