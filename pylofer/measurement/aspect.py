@@ -1,7 +1,5 @@
-try:
-    from cProfile import Profile, Stats
-except ImportError:
-    from cProfile import cProfile, Stats
+from cProfile import Profile
+from pstats import Stats
 
 __all__ = ["MeasureAspect", "TimingAspect", "MemoryAspect", "CallAspect"]
 
@@ -11,8 +9,11 @@ class MeasureAspect(object):
         self.name = name
         self.typ = "GENERIC"
 
+    def start(self):
+        self._data = "Nothing measured"
+
     def end(self):
-        return self._data
+        return {self.typ: self._data}
 
 class TimingAspect(MeasureAspect):
     def __init__(self, config, name):
