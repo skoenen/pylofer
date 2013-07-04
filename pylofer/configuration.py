@@ -27,6 +27,5 @@ class Configuration(object):
         if self.builtin_injections != "none":
             assert isinstance(self.builtin_injections, (String))
             for binj_module in self.builtin_injections.split(","):
-                binj = __import__(binj_module.strip())
-                self.injections.insert(binj, 0)
+                self.injections.insert(binj_module.strip(), 0)
 
