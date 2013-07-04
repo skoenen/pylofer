@@ -1,0 +1,53 @@
+digraph {
+  size="300";
+  splines=ortho;
+  fontname="Source Code Pro";
+  fontsize=9.0;
+  nodesep=0.15;
+  normalize=true;
+
+  // Actor
+  node [shape=box]
+  Injector;
+  MeasureClient;
+  MeasureServer;
+  Measurement;
+
+  // Data
+  node [shape=invtrapezium];
+  Storage;
+  MeasureClient;
+  SQLAlchemyStorage;
+  NoSQLStorage;
+  Configuration
+
+  // Multi instances
+  node [shape=doubleoctagon];
+  Injections;
+  MeasureAspect;
+
+  // Use Relations
+  edge [arrowhead=box];
+  Injector -> Injections;
+  Injector -> Configuration;
+  Injections -> Measurement;
+  MeasureServer -> Storage;
+  MeasureServer -> Configuration;
+  Measurement -> Storage;
+  Measurement -> MeasureAspect;
+  MeasureAspect -> Configuration
+
+  // Instance Relation
+  edge [arrowhead=diamond];
+  Storage -> MeasureClient;
+  Storage -> SQLAlchemyStorage;
+  Storage -> NoSQLStorage;
+
+  MeasureAspect -> TimingAspect;
+  MeasureAspect -> MemoryAspect;
+  MeasureAspect -> CallAspect
+
+  // Send Relation
+  edge [arrowhead=vee, arrowtail=vee];
+  MeasureClient -> MeasureServer;
+}
