@@ -1,44 +1,53 @@
-import socket
-import threading
-import json
 
 __all__ = ['Measurement']
 
 class Measurement(object):
-    def __init__(self, config={}, data=None):
-        if data:
-            obj = json.dumps(data)
-            self._merge_with(obj)
-        else:
-            self.data = {}
-            self.typ = "GENERIC"
+    def __init__(self, config, storage):
+        self.config = config
+        self.storage = storage
+
+    def start_new(self, measure_point_name):
+        measure = Measure(self.config,
+                self.storage,
+                measure_point_name,
+                self.config.measure.aspects)
+        return measure.start()
+
+class Measure(object):
+    def __init__(self,
+            config,
+            storage,
+            measure_point_name,
+            aspect_names={},
+            data=None):
 
         self.config = config
+        self.storage = storage
 
-    def _merge_with(self, obj):
-        if "typ" in obj:
-            self.typ = getattr(obj, "typ", "GENERIC")
-            del obj["typ"]
+        if data:
+            self.name = data["name"]
+            self.data = [measure for measure in data["measures"]]
 
-        self.data = obj
+        else:
+            self.name = measure_point_name
+            self.data = []
+            self.aspects = []
+            for aspect_module, aspect_name in aspect_names.iteritems():
+                aspect = __import__(aspect_module, aspect_name)
+                self.aspects.append(aspect[aspect_name](self.config, self.name))
 
-    def __str__(self):
-        return json.dumps(self.data)
+    def start(self):
+        for aspect in self.aspects:
+            aspect.start()
+        return self
 
-    def __repr__(self):
-        return __str__()
+    def end(self):
+        for aspect in self.aspects:
+            self.data.append({aspect.name: aspect.end()})
 
-    def __setitem__(self, key, value):
-        self.data[key] = value
+        self.save()
+        return self
 
-    def __getitem__(self, key):
-        return getattr(self.data, key, None)
+    def save(self):
+        self.storage.save(self)
 
-    def delitem(self, key):
-        if key in self.data:
-            del(self.data[key])
-
-class TimingMeasurement(Measurement):
-    def __init__(self, config={}, data=None):
-        super(TimingMeasurement, self).__init__(config, data)
-        self.typ = "TIMING"
