@@ -7,5 +7,6 @@ setup(
     author="Stefan Koenen",
     author_email="stefan.koenen@uni-duesseldorf.de",
     url="https://github.com/skoenen/pylofer",
-    packages=['pylofer']
+    packages=['pylofer'],
+    entry_points={'paste.app_factory': ['main=pylofer.inject']}
     )
