@@ -25,7 +25,8 @@ class Configuration(object):
                 "bultin_injections", "pylofer.injections").lower()
 
         if self.builtin_injections != "none":
-            pass
+            assert isinstance(self.builtin_injections, (String))
+            for binj_module in self.builtin_injections.split(","):
+                binj = __import__(binj_module.strip())
+                self.injections.insert(binj, 0)
 
-    def should_measure(key):
-        return self.config.fetch("measure.{}".format(key), False)
