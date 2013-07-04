@@ -1,8 +1,12 @@
 from pylofer import Configuration
-from pylofer.measurement import MeasureClient
+from pylofer.measurement import Measurement
+
+from paste.registry import StackedObjectProxy
 
 
 __all__ = ['Injector']
+
+pylofer_proxy = StackedObjectProxy(name="pylofer")
 
 class Injector(object):
     def __init__(self, app, config):
@@ -17,4 +21,6 @@ class Injector(object):
             pylofer.client = MeasureClient(self.config.endpoint)
 
     def __call__(self, environ, start_response):
+        if environ.has_key('paste.registry'):
+            environ['paste.registry'].register(pylofer_proxy, Measurement())
         return self.app(environ, start_response)
