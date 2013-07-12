@@ -1,16 +1,25 @@
+from pylofer import Configuration
 from pylofer.storage import Storage
-from SocketServer import UDPServer, UnixDatagramServer
+
+from SocketServer import ThreadingUDPServer, ThreadingUnixDatagramServer
 
 
-__all__ = ['MeasureClient', 'MeasureServer']
+__all__ = ['ServerStorage']
 
 class ServerStorage(Storage):
-    pass
+    def __init__(self, config=None):
+        self.config = config if config is not None else Configuration()
 
 class ServerStorageClient(object):
-    def __init__(self, config={}):
-        self.port = getattr(config, "port", 60000)
-        self.host = getattr(config, "host", "")
+    def __init__(self, config=None):
+        self.config = config if config is not None else Configuration()
+
+        self.endpoint = self.config.endpoint
+        if self.endpoint.scheme == "udp":
+            self.port = self.endpoint.port
+            self.host = self.endpoint.host
+        else:
+            pass
 
         self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         self.sock.connect((self.host, self.port))
@@ -19,37 +28,31 @@ class ServerStorageClient(object):
         self.sock.send(str(measure))
 
 
-class ServerStorageServer(object):
-    allowed_hosts = ["127.0.0.1", "::1"]
+class ServerStorageServer(ThreadingMixIn, object):
+    def __init__(self, config=None):
+        self.config = config if not config is None else Configuration()
 
-    def __init__(self, config={}):
-        self.port = getattr(config, "port", 60000)
-        self.host = getattr(config, "host", "")
+        self.endpoint = self.config.endpoint
+        if self.endpoint.scheme == "udp":
+            self.server = TUDPServer(
+                    self.endpoint.host, self.endpoint.port,
+                    ServerStorageRequestHandler)
+        else:
+            self.server = TUnixServer(
+                    self.endpoint.path, ServerStorageRequestHandler)
 
-        self.allowed_hosts = getattr(config, "allowed_hosts", self.allowed_hosts)
+        self.server.allowed_hosts = self.config.allowed_hosts
+        self.server.serve_forever()
 
-        self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        self.sock.bind((self.host, self.port))
+class TUDPServer(ThreadingUDPServer):
+    def verify_request(self, request, client_addr):
+        return True if client_addr in self.allowed_hosts else False
 
-        self.handle_thread = threading.Thread(target=self._handle,
-                                              name="handle_incoming_measurements")
+class TUnixServer(ThreadingUnixDatagramServer):
+    def verify_request(self, request, client_addr):
+        return True if client_addr in self.allowed_hosts else False
 
-        self.event_exit = threading.Event()
+class ServerStorageRequestHandler(DatagramRequestHandler):
+    def handle(self):
+        pass
 
-
-    def _handle(self):
-        while True:
-            data, addr = self.sock.recvfrom(1024)
-
-            if addr[0] in self.allowed_hosts:
-                measure = Measurement(data=data)
-                measure.save()
-
-            if self.event_exit.is_set():
-                break
-
-    def quit(self):
-        self.event_exit.set()
-
-    def serv(self):
-        self.handle_thread.run()
