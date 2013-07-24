@@ -3,6 +3,8 @@ from pylofer.storage import Storage
 
 from SocketServer import ThreadingUDPServer, ThreadingUnixDatagramServer
 
+from pylofer.util.socket_client import client_from_url
+
 
 __all__ = ['ServerStorage']
 
@@ -15,14 +17,7 @@ class ServerStorageClient(object):
         self.config = config if config is not None else Configuration()
 
         self.endpoint = self.config.endpoint
-        if self.endpoint.scheme == "udp":
-            self.port = self.endpoint.port
-            self.host = self.endpoint.host
-        else:
-            pass
-
-        self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        self.sock.connect((self.host, self.port))
+        self.client = client_from_url(self.endpoint)
 
     def send(self, measure):
         self.sock.send(str(measure))

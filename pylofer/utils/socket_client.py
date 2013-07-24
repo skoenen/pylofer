@@ -1,9 +1,9 @@
 import socket
 
 try:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, ParseResult
 except ImportError:
-    from urlparse import urlparse
+    from urlparse import urlparse, ParseResult
 
 
 __all__ =   ['BaseClient',
@@ -35,6 +35,7 @@ class BaseClient(object):
 
     def __init__(self, client_addr):
         self.client_addr = client_addr
+
         self.connect()
 
     def handle(self, data):
@@ -67,7 +68,7 @@ class BaseClient(object):
     def get_response(self):
         """Nothing to get here, should be overwriten in subclasses.
         """
-        pass
+        raise NotImplementedError("Use subclass that implement this.")
 
     def verify_response(self, response):
         """Return always true, what else should be verified?!
@@ -103,7 +104,10 @@ class TCPClient(BaseClient):
     socket_type = socket.SOCK_STREAM
 
     def __init__(self, client_addr):
-        self.url = urlparse(client_addr)
+        if not isinstance(client_addr, (ParseResult)):
+            self.url = urlparse(client_addr)
+        else:
+            self.url = client_addr
 
         if "6" in self.url.scheme:
             self.family = socket.AF_INET6
@@ -119,6 +123,8 @@ class TCPClient(BaseClient):
 
     def get_response(self):
         addr, data = self.socket.recv(self.MAX_BUFFER_SIZE)
+        return data
+
 class UDPClient(TCPClient):
     socket_type = socket.SOCK_DGRAM
 
@@ -139,4 +145,15 @@ if hasattr(socket, 'AF_UNIX'):
             super(UnixStreamClient, self).__init__(client_addr)
 
             self.family = socket.AF_UNIX
+
+
+def client_from_url(url):
+    parsed_url = urlparse(url)
+
+    if "tcp" in parsed_url.scheme:
+        return TCPClient(url)
+    elif "udp" in parsed_url.scheme:
+        return UDPClient(url)
+    else:
+        return UnixStreamClient(url)
 

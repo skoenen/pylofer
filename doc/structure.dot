@@ -9,14 +9,14 @@ digraph {
   // Actor
   node [shape=box]
   Injector;
-  MeasureClient;
-  MeasureServer;
+  ServerStorageClient;
+  ServerStorageServer;
   Measurement;
 
   // Data
   node [shape=invtrapezium];
   Storage;
-  MeasureClient;
+  ServerStorage;
   SQLAlchemyStorage;
   NoSQLStorage;
   Configuration
@@ -31,15 +31,16 @@ digraph {
   Injector -> Injections;
   Injector -> Configuration;
   Injections -> Measurement;
-  MeasureServer -> Storage;
-  MeasureServer -> Configuration;
+  ServerStorage -> Storage;
+  ServerStorage -> Configuration;
+  ServerStorage -> ServerStorageClient;
   Measurement -> Storage;
   Measurement -> MeasureAspect;
   MeasureAspect -> Configuration
 
   // Instance Relation
   edge [arrowhead=diamond];
-  Storage -> MeasureClient;
+  Storage -> ServerStorage;
   Storage -> SQLAlchemyStorage;
   Storage -> NoSQLStorage;
 
@@ -49,5 +50,5 @@ digraph {
 
   // Send Relation
   edge [arrowhead=vee, arrowtail=vee];
-  MeasureClient -> MeasureServer;
+  ServerStorageClient -> ServerStorageServer;
 }
