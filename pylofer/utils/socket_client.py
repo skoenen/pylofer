@@ -13,6 +13,13 @@ __all__ =   ['BaseClient',
             'UnixDatagramClient']
 
 
+class ResponseHandler(object):
+    def __init__(self, response, client):
+        pass
+
+    def __call__(self):
+        pass
+
 """Provides easy instantiation and handling of a client to a server.
 Needs the client addr in the form:
 
@@ -33,8 +40,13 @@ class BaseClient(object):
     timeout = None
     socket_family = None
 
-    def __init__(self, client_addr):
+    def __init__(self, client_addr, response_handler = None):
         self.client_addr = client_addr
+
+        if response_handler is not None:
+            self.response_handler_class = response_handler
+        else:
+            self.response_handler_class = response_handler
 
         self.connect()
 
@@ -77,7 +89,7 @@ class BaseClient(object):
         return True
 
     def process_response(self, response):
-        return self.RequestHandlerClass(response, self)
+        return self.response_handler_class(response, self)()
 
     def send(self, data):
         if self.connection is not None:
