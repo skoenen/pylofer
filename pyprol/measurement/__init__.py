@@ -1,6 +1,6 @@
-from pylofer.measurement.measurement import Measurement
-from pylofer.measurement.measurement import Measure
-from pylofer.measurement.aspect import *
+from pyprol.measurement.measurement import Measurement
+from pyprol.measurement.measurement import Measure
+from pyprol.measurement.aspect import *
 
 __all__ = [
         'Measurement',

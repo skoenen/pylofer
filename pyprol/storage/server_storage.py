@@ -1,12 +1,14 @@
-from pylofer import Configuration
-from pylofer.storage import Storage
+from pyprol import Configuration
+from pyprol.storage import Storage
 
 from SocketServer import ThreadingUDPServer, ThreadingUnixDatagramServer
 
-from pylofer.util.socket_client import client_from_url
+from pyprol.util.socket_client import client_from_url
 
 
 __all__ = ['ServerStorage']
+
+SCHEME = ["udp", "tcp", "udp6", "tcp6"]
 
 class ServerStorage(Storage):
     def __init__(self, config=None):
