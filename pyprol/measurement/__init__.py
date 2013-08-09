@@ -1,11 +1,5 @@
-from pyprol.measurement.measurement import Measurement
-from pyprol.measurement.measurement import Measure
-from pyprol.measurement.aspect import *
+from measurement.measurement import measure
 
-__all__ = [
-        'Measurement',
-        'Measure',
-        'MeasureAspect',
-        'TimingAspect',
-        'MemoryAspect',
-        'CallAspect']
+
+__all__ = ['measure']
+

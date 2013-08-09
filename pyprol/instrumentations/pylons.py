@@ -1,19 +1,20 @@
-from pyprol.measurement import Measurement
+from measurement import measure
 
-try:
-    from pylons import WSGIController
 
-    class WSGIController:
-        _org_perform_call = _perform_call
+def inject(config):
+    try:
+        from pylons import WSGIController
 
-        def _perform_call(self, func, args):
-            measure = Measurement().start()
-            __traceback_hide__ = 'before_and_this'
-            result = _org_perform_call(func, args)
-            measure.end()
-            return result
+        class WSGIController:
+            _org_perform_call = _perform_call
 
-except ImportError:
-    from pyprol.utils import logger
-    logger.get_logger().info("No `pylons` in this context.")
+            def _perform_call(self, func, args):
+                __traceback_hide__ = 'before_and_this'
+                result = _org_perform_call(func, args)
+                measure(__name__)
+                return result
+
+    except ImportError:
+        from logging import getLogger
+        getLogger().info("No `pylons` in this context.")
 

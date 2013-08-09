@@ -1,0 +1,62 @@
+from unittest import TestCase
+
+import configuration
+
+
+class ConfigurationTestCase(TestCase):
+    def assertHasAttribute(self, obj, attr):
+        self.assertTrue(hasattr(obj, attr))
+
+    def setUp(self):
+        self.polluted_config = {
+                "pyprol.storage_endpoint": "sqlite://$HOME/pyprol_test.db",
+                "pyprol.instrumentations": "some.instrumentations.config, some.instrumentations.runner",
+                "someother.option": "some value",
+                "another.option": "with, a, list, value"}
+
+        self.clean_config = {
+                "pyprol.storage_endpoint": "sqlite://$HOME/pyprol_test.db",
+                "pyprol.instrumentations": "some.instrumentations.config, some.instrumentations.runner"}
+
+        self.instrumentations = [
+                "some.instrumentations.config",
+                "some.instrumentations.runner",
+                "instrumentations.paste",
+                "instrumentations.pylons",
+                "instrumentations.sqlalchemy"]
+
+        self.storage_endpoint = "sqlite://$HOME/pyprol_test.db"
+
+
+    def test_config_filter(self):
+        result = configuration.config_filter(self.polluted_config)
+
+        self.assertEqual(result, self.clean_config)
+
+    def test_instrumentation_list(self):
+        result = configuration.instrumentation_list(
+                self.clean_config["pyprol.instrumentations"])
+
+        self.assertEqual(result,
+                ["some.instrumentations.config",
+                "some.instrumentations.runner"])
+
+    def test_configuration(self):
+        config = configuration.Configuration(self.polluted_config)
+
+        self.assertEqual(
+                config.instrumentations,
+                self.instrumentations)
+
+        self.assertEqual(
+                config.storage_endpoint,
+                self.storage_endpoint)
+
+    def test_additional_keys(self):
+        self.clean_config["pyprol.storage_server.storage_endpoint"] = "sqlite://$HOME/pyprol_server.db"
+
+        config = configuration.Configuration(self.clean_config)
+
+        self.assertHasAttribute(config, "storage_server")
+        self.assertHasAttribute(config.storage_server, "storage_endpoint")
+

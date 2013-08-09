@@ -1,22 +1,29 @@
-from pyprol import Configuration
-from pyprol.storage import Storage
+from socketserver import ThreadingUDPServer, ThreadingUnixDatagramServer, DatagramRequestHandler
 
-from SocketServer import ThreadingUDPServer, ThreadingUnixDatagramServer
+from utils.socket_client import client_from_url
 
-from pyprol.util.socket_client import client_from_url
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 __all__ = ['ServerStorage']
 
-SCHEME = ["udp", "tcp", "udp6", "tcp6"]
+SCHEME = ("udp", "udp6", "unix")
 
-class ServerStorage(Storage):
-    def __init__(self, config=None):
-        self.config = config if config is not None else Configuration()
+class ServerStorage(object):
+    def __init__(self, config, parsed_url=None):
+        self.config = config
+
+        if parsed_url is None:
+            self.url = urlparse(self.config.storage_endpoint)
+        else:
+            self.url = parsed_url
 
 class ServerStorageClient(object):
-    def __init__(self, config=None):
-        self.config = config if config is not None else Configuration()
+    def __init__(self, config):
+        self.config = config
 
         self.endpoint = self.config.endpoint
         self.client = client_from_url(self.endpoint)
@@ -24,13 +31,13 @@ class ServerStorageClient(object):
     def send(self, measure):
         self.sock.send(str(measure))
 
+class ServerStorageServer(object):
 
-class ServerStorageServer(ThreadingMixIn, object):
-    def __init__(self, config=None):
-        self.config = config if not config is None else Configuration()
+    def __init__(self, config):
+        self.config = config
 
         self.endpoint = self.config.endpoint
-        if self.endpoint.scheme == "udp":
+        if "udp" in self.endpoint.scheme:
             self.server = TUDPServer(
                     self.endpoint.host, self.endpoint.port,
                     ServerStorageRequestHandler)
@@ -39,6 +46,9 @@ class ServerStorageServer(ThreadingMixIn, object):
                     self.endpoint.path, ServerStorageRequestHandler)
 
         self.server.allowed_hosts = self.config.allowed_hosts
+
+        from storage.factory import storage_factory
+        self.storage = storage_factory(self.config.storage_server.storage_endpoint)
         self.server.serve_forever()
 
 class TUDPServer(ThreadingUDPServer):

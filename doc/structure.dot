@@ -8,7 +8,7 @@ digraph {
 
   // Actor
   node [shape=box]
-  Injector;
+  Pyprol;
   ServerStorageClient;
   ServerStorageServer;
   Measurement;
