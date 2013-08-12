@@ -6,20 +6,22 @@ except ImportError:
 from storage import server_storage, sqlite_storage, console_storage
 
 
-__all__ = ["storage_factory"]
+__all__ = ["StorageFactory"]
 
-storage = None
-SCHEME = ()
+class StorageFactory(object):
+    _storage = None
+    _storage_impls = (sqlite_storage, server_storage, console_storage)
 
-storage_impls = (sqlite_storage, server_storage, console_storage)
+    def __init__(self, config):
+        self.config = config
 
-def storage_factory(config):
-    if storage is None:
-        parsed = urlparse(getattr(config, "storage_endpoint"))
-        for storage_impl in storage_impls:
-            for scheme in storage_impl.SCHEME:
-                if parsed.scheme == scheme:
-                    storage = storage_impl(config, parsed)
+    def storage(self):
+        if _storage is None:
+            parsed = urlparse(getattr(config, "storage_endpoint"))
+            for storage_impl in _storage_impls:
+                for scheme in storage_impl.SCHEME:
+                    if parsed.scheme == scheme:
+                        _storage = storage_impl(config, parsed)
 
-    return storage
+        return storage
 

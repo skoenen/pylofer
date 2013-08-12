@@ -18,6 +18,9 @@ def instrumentation_list(option):
         instr.append(item.strip())
     return instr
 
+class OptionContainer(object):
+    pass
+
 class Configuration(object):
     instrumentations = None
     storage_endpoint = None
@@ -28,7 +31,7 @@ class Configuration(object):
 
             for c_key, c_value in self.config.items():
                 parts = c_key.split(".")
-                set_option(parts[1:], c_value)
+                self.set_option(parts[1:], c_value)
 
         else:
             self.config = {}
@@ -46,19 +49,24 @@ class Configuration(object):
                             "instrumentations.{0}".format(instrument))
 
     def set_option(self, key_parts, value, base=None):
-        if isinstance(key_parts, (list,)):
-            set_option(key_parts[0], object())
-            set_option(key_parts[1], value, getattr(self, key_parts[0]))
-
-        if base is None:
-            base = self
-
-        if key == "instrumentations":
-            setattr(base, 'instrumentations', instrumentation_list(c_value))
-
-        elif key == "storage":
-            setattr(base, 'storage_endpoint', value)
-
+        if isinstance(key_parts, (list,)) and len(key_parts) > 1:
+            self.set_option(key_parts[0], OptionContainer())
+            self.set_option(key_parts[1], value, getattr(self, key_parts[0]))
         else:
-            setattr(base, key_parts, value)
+            if base is None:
+                base = self
+
+            if isinstance(key_parts, (list,)):
+                key = key_parts[0]
+            else:
+                key = key_parts
+
+            if key == "instrumentations":
+                setattr(base, 'instrumentations', instrumentation_list(value))
+
+            elif key == "storage":
+                setattr(base, 'storage_endpoint', value)
+
+            else:
+                setattr(base, key, value)
 

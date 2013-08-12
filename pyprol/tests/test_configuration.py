@@ -54,9 +54,12 @@ class ConfigurationTestCase(TestCase):
 
     def test_additional_keys(self):
         self.clean_config["pyprol.storage_server.storage_endpoint"] = "sqlite://$HOME/pyprol_server.db"
+        self.clean_config["pyprol.measure.save_process_wait"] = 1
 
         config = configuration.Configuration(self.clean_config)
 
         self.assertHasAttribute(config, "storage_server")
         self.assertHasAttribute(config.storage_server, "storage_endpoint")
+        self.assertHasAttribute(config, "measure")
+        self.assertHasAttribute(config.measure, "save_process_wait")
 

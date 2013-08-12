@@ -1,11 +1,5 @@
 from socketserver import ThreadingUDPServer, ThreadingUnixDatagramServer, DatagramRequestHandler
-
 from utils.socket_client import client_from_url
-
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 
 
 __all__ = ['ServerStorage']
@@ -16,11 +10,6 @@ class ServerStorage(object):
     def __init__(self, config, parsed_url=None):
         self.config = config
 
-        if parsed_url is None:
-            self.url = urlparse(self.config.storage_endpoint)
-        else:
-            self.url = parsed_url
-
 class ServerStorageClient(object):
     def __init__(self, config):
         self.config = config
@@ -29,10 +18,12 @@ class ServerStorageClient(object):
         self.client = client_from_url(self.endpoint)
 
     def send(self, measure):
-        self.sock.send(str(measure))
+        self.client.send(str(measure))
+
+    def __del__(self):
+        del(self.client)
 
 class ServerStorageServer(object):
-
     def __init__(self, config):
         self.config = config
 
@@ -41,6 +32,7 @@ class ServerStorageServer(object):
             self.server = TUDPServer(
                     self.endpoint.host, self.endpoint.port,
                     ServerStorageRequestHandler)
+
         else:
             self.server = TUnixServer(
                     self.endpoint.path, ServerStorageRequestHandler)
@@ -50,6 +42,11 @@ class ServerStorageServer(object):
         from storage.factory import storage_factory
         self.storage = storage_factory(self.config.storage_server.storage_endpoint)
         self.server.serve_forever()
+
+        signal.signal(signal.SIGTERM, __del__)
+
+    def __del__(self):
+        self.server.shutdown()
 
 class TUDPServer(ThreadingUDPServer):
     def verify_request(self, request, client_addr):
