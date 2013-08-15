@@ -1,9 +1,11 @@
 from unittest import TestCase
-from os import environ
+from datetime import date
+from collections import namedtuple
 
-from configuration import Configuration
+import os
+
 #from storage.server_storage import ServerStorage
-from storage.sqlite_storage import SQLiteStorage
+from storage import sqlite_storage
 #from storage.console_storage import ConsoleStorage
 #from storage.file_storage import FileStorage
 from storage.factory import StorageFactory
@@ -14,7 +16,15 @@ except ImportError:
     from urlparse import urlparse
 
 
-endpoint = "pyprol.storage_endpoint"
+class Configuration:
+    pass
+
+class Measure:
+    timings = None
+
+TimingStat = namedtuple(
+        "TimingStat",
+        ["call_count", "time_total", "time_in", "calls"])
 
 #class ServerStorageTestCase(TestCase):
 
@@ -41,19 +51,56 @@ endpoint = "pyprol.storage_endpoint"
 
 class SQLiteStorageTestCase(TestCase):
     def setUp(self):
+        self.db_path = "{}/pyprol_tests_sqlite_storage.db".format(os.environ["HOME"])
+
         self.config = Configuration()
+        self.config.storage_endpoint = urlparse(
+                "sqlite://{}".format(self.db_path))
+
+        if os.path.exists(self.db_path):
+            os.remove(self.db_path)
+
+    def tearDown(self):
+        if os.path.exists(self.db_path):
+            os.remove(self.db_path)
 
     def test_url_expansion(self):
         self.config.storage_endpoint = "sqlite://$HOME/pyprol_sqlite_test.db"
 
-        expanded_url = SQLiteStorage.var_expand(self.config.storage_endpoint)
+        expanded_url = sqlite_storage.SQLiteStorage.var_expand(
+                self.config.storage_endpoint)
 
         self.assertEqual(
                 expanded_url,
-                "sqlite://{}/pyprol_sqlite_test.db".format(environ["HOME"]))
+                "sqlite://{}/pyprol_sqlite_test.db".format(os.environ["HOME"]))
 
     def test_sqlite(self):
-        self.config.storage_endpoint = "sqlite://{}/pyprol_sqlite_test.db".format(environ["HOME"])
+        storage = sqlite_storage.SQLiteStorage(self.config)
+
+    def test_wrong_path(self):
+        self.config.storage_endpoint = urlparse(
+                "sqlite:///a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/wrong_path")
+
+        with self.assertRaises(RuntimeError):
+            storage = sqlite_storage.SQLiteStorage(self.config)
+
+    def test_save_timing(self):
+        class Measure:
+            name = "run_test"
+            timestamp = date.today()
+            timing = None
+
+        measure = Measure()
+        measure.timings = TimingStat(5, 0.100, 0.50, ['print', '+'])
+
+        storage = sqlite_storage.SQLiteStorage(self.config)
+        storage.save(measure)
+        del(storage)
+
+        conn = sqlite3.connect(self.config.storage_endpoint)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM timings")
+        self.assertEqual(cur.rowcount, 1)
 
 class StorageFactoryTestCase(TestCase):
     def setUp(self):

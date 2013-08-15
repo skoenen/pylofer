@@ -1,5 +1,2 @@
-from measurement.measurement import measure
-
-
-__all__ = ['measure']
+from measurement.measurement import *
 

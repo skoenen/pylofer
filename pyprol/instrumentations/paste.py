@@ -1,4 +1,4 @@
-from measurement import measure
+import measurement
 
 
 def inject(config):
@@ -9,8 +9,9 @@ def inject(config):
             _org_wsgi_start_respone = wsgi_start_response
 
             def wsgi_start_response(self, status, response_headers, exc_info=None):
+                measure = measurement.enable(__name__)
                 result = _org_wsgi_start_respone(status, response_headers, exc_info)
-                measure(__name__)
+                measurement.disable(measure)
                 return result
 
     except ImportError:

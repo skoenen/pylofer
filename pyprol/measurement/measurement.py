@@ -1,29 +1,57 @@
 from storage.factory import StorageFactory
 from multiprocessing import Process, Queue
 from collections import namedtuple
+from cProfile import Profile
 
-import yappi
 import signal
 
+
+__all__ = ['Measure', 'enable', 'disable', 'init', 'shutdown']
 
 _save_queue = None
 _save_process = None
 
-MeasurePointStat = namedtuple(
-        "MeasurePointStat",
-        ["call_count", "time_total", "time_in_function", "time_average"])
+TimingStat = namedtuple(
+        "TimingStat",
+        ["call_count", "time_total", "time_in", "calls"])
 
-if not yappi.is_running():
-    yappi.start()
+class Measure:
+    _save_queue = None
 
-def measure(measure_point_name):
-    stats = yappi.get_func_stats(yappi.SORTTYPE_NAME)
-    for func_stat in stats.func_stats:
-        if func_stat.name == measure_point_name:
-            _save_queue.put_nowait(MeasurePointStat(
-                    func_stat.ncall, func_stat.ttot,
-                    func_stat.tsub, func_stat.tavg))
-            break
+    point_name = None
+
+    timings = None
+    memory = None
+
+    def __init__(self, measure_point_name, save_queue):
+        self.point_name = measure_point_name
+        self._save_queue = save_queue
+        self._profile = Profile()
+
+    def start(self):
+        self._profile.enable()
+        return self
+
+    def stop(self):
+        self._profile.disable()
+        stat = self._profile.getstats()[0]
+        self.timings = TimingStat(
+                stat.callcount, stat.totaltime, stat.inlinetime, stat.calls)
+        return self
+
+    def save(self):
+        self._save_queue.put_nowait(self)
+        return self
+
+def enable(measure_point_name):
+    return Measure(measure_point_name, _save_queue).start()
+
+def disable(measure):
+    return measure.stop().save()
+
+def _convert_cprofile_calls(calls):
+    for call in calls:
+        pass
 
 def _save_measurement(config, queue):
     shutdown = False

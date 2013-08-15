@@ -1,4 +1,4 @@
-from measurement import measure
+import measurement
 
 
 def inject(config):
@@ -10,8 +10,9 @@ def inject(config):
 
             def _perform_call(self, func, args):
                 __traceback_hide__ = 'before_and_this'
+                measure = measurement.enable(__name__)
                 result = _org_perform_call(func, args)
-                measure(__name__)
+                measurement.disable(measure)
                 return result
 
     except ImportError:
