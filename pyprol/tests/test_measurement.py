@@ -1,7 +1,8 @@
 from unittest import TestCase
 
-import measurement
+from fixture import Configuration, Storage
 
+import measurement
 
 class MeasurementTestCase(TestCase):
     def setUp(self):

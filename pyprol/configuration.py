@@ -48,6 +48,12 @@ class Configuration(object):
                     self.instrumentations.append(
                             "instrumentations.{0}".format(instrument))
 
+        if not hasattr(self, 'measure'):
+            setattr(self, 'measure', OptionContainer())
+
+        if not hasattr(self.measure, 'save_process_wait'):
+            setattr(self.measure, 'save_process_wait', 0.01)
+
     def set_option(self, key_parts, value, base=None):
         if isinstance(key_parts, (list,)) and len(key_parts) > 1:
             self.set_option(key_parts[0], OptionContainer())

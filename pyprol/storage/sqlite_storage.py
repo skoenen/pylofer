@@ -35,31 +35,17 @@ class SQLiteStorage(object):
             "call_count INTEGER, "
             "time_total REAL, "
             "time_in_function REAL, "
-            "call_stack TEXT)"),
-             ("CREATE TABLE IF NOT EXISTS memory ("
-            "timestamp TEXT, "
-            "measure_point VARCHAR(255) NOT NULL, "
-            "objects_before INTEGER, "
-            "objects_after INTEGER, "
-            "bytes_before INTEGER, "
-            "bytes_after INTEGER, "
-            "list_before TEXT, "
-            "list_after TEXT)")]
+            "call_stack TEXT)")]
     insert_timing = ("INSERT INTO timings "
                     "(timestamp, measure_point, call_count, time_total, "
                     "time_in_function, call_stack) "
                     "VALUES (?, ?, ?, ?, ?, ?)")
-    insert_memory = ("INSERT INTO memory "
-                    "(measure_point, objects_before, objects_after,"
-                    " bytes_before, bytes_after, list_before, list_after) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)")
-
     conn = None
 
     def __init__(self, config):
         self.config = config
-        path = SQLiteStorage.var_expand(self.config.storage_endpoint.netloc)
-        path += SQLiteStorage.var_expand(self.config.storage_endpoint.path)
+        path = var_expand(self.config.storage_endpoint.netloc)
+        path += var_expand(self.config.storage_endpoint.path)
 
         try:
             self.conn = sqlite3.connect(path)
@@ -74,6 +60,7 @@ class SQLiteStorage(object):
 
     def save(self, measure):
         if hasattr(measure, 'timing'):
+            print(measure.timings)
             timing_entry = TimingTableEntry(
                     measure.timestamp,
                     measure.name,
@@ -84,10 +71,9 @@ class SQLiteStorage(object):
         if self.conn is not None:
             self.conn.close()
 
-    @classmethod
-    def var_expand(self, string):
-        for key in os.environ.keys():
-            string = re.sub("\${}".format(key), os.environ[key], string)
+def var_expand(string):
+    for key in os.environ.keys():
+        string = re.sub("\${}".format(key), os.environ[key], string)
 
-        return string
+    return string
 

@@ -3,6 +3,7 @@ from multiprocessing import Process, Queue
 from collections import namedtuple
 from cProfile import Profile
 
+import time
 import signal
 
 
@@ -13,15 +14,13 @@ _save_process = None
 
 TimingStat = namedtuple(
         "TimingStat",
-        ["call_count", "time_total", "time_in", "calls"])
+        ["code", "call_count", "time_total", "time_function", "calls"])
 
 class Measure:
     _save_queue = None
 
     point_name = None
-
     timings = None
-    memory = None
 
     def __init__(self, measure_point_name, save_queue):
         self.point_name = measure_point_name
@@ -35,23 +34,29 @@ class Measure:
     def stop(self):
         self._profile.disable()
         stat = self._profile.getstats()[0]
-        self.timings = TimingStat(
-                stat.callcount, stat.totaltime, stat.inlinetime, stat.calls)
+
+        self.timings = TimingStat(stat.callcount, stat.reccallcount,
+                stat.totaltime, stat.inlinetime, stat.calls)
         return self
 
     def save(self):
         self._save_queue.put_nowait(self)
         return self
 
+    def transform(self):
+        calls = []
+        for call in self.timings.calls:
+            calls.append(TimingStat(call.code, call.callcount,
+                    call.reccallcount, call.totaltime, call.inlinetime, None))
+
+        self.timings.calls = calls
+
+
 def enable(measure_point_name):
     return Measure(measure_point_name, _save_queue).start()
 
 def disable(measure):
     return measure.stop().save()
-
-def _convert_cprofile_calls(calls):
-    for call in calls:
-        pass
 
 def _save_measurement(config, queue):
     shutdown = False
@@ -66,7 +71,9 @@ def _save_measurement(config, queue):
 
     while not shutdown:
         try:
-            storage.save(queue.get(), queue_timeout)
+            measure = queue.get(queue_timeout)
+            measure.transform()
+            storage.save(measure)
         except Queue.Empty:
             pass
 
