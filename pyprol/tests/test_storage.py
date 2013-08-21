@@ -24,7 +24,7 @@ class Measure:
 
 TimingStat = namedtuple(
         "TimingStat",
-        ["call_count", "time_total", "time_in", "calls"])
+        ["code", "call_count", "time_total", "time_function", "calls"])
 
 #class ServerStorageTestCase(TestCase):
 
