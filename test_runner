@@ -1,0 +1,12 @@
+#!/bin/bash
+
+python="$(which python2)"
+echo "RUNNING Tests in python 2"
+echo "$python"
+$python -m unittest
+
+python="$(which python3)"
+echo "RUNNING Tests in python 3"
+echo "$python"
+$python -m unittest
+

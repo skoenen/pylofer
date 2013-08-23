@@ -1,8 +1,7 @@
 from unittest import TestCase
+from tests.fixture import Configuration, Storage
+from pyprol import measurement
 
-from fixture import Configuration, Storage
-
-import measurement
 
 class MeasurementTestCase(TestCase):
     def setUp(self):
@@ -10,3 +9,4 @@ class MeasurementTestCase(TestCase):
 
     def test_measure(self):
         pass
+

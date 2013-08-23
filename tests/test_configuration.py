@@ -1,6 +1,10 @@
 from unittest import TestCase
+from pyprol import configuration
 
-import configuration
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class ConfigurationTestCase(TestCase):
@@ -9,13 +13,13 @@ class ConfigurationTestCase(TestCase):
 
     def setUp(self):
         self.polluted_config = {
-                "pyprol.storage_endpoint": "sqlite://$HOME/pyprol_test.db",
+                "pyprol.storage": "sqlite://$HOME/pyprol_test.db",
                 "pyprol.instrumentations": "some.instrumentations.config, some.instrumentations.runner",
                 "someother.option": "some value",
                 "another.option": "with, a, list, value"}
 
         self.clean_config = {
-                "pyprol.storage_endpoint": "sqlite://$HOME/pyprol_test.db",
+                "pyprol.storage": "sqlite://$HOME/pyprol_test.db",
                 "pyprol.instrumentations": "some.instrumentations.config, some.instrumentations.runner"}
 
         self.instrumentations = [
@@ -25,7 +29,7 @@ class ConfigurationTestCase(TestCase):
                 "instrumentations.pylons",
                 "instrumentations.sqlalchemy"]
 
-        self.storage_endpoint = "sqlite://$HOME/pyprol_test.db"
+        self.storage_endpoint = urlparse("sqlite://$HOME/pyprol_test.db")
 
 
     def test_config_filter(self):
