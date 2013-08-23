@@ -6,7 +6,7 @@ from . import measurement
 _pyprol = None
 
 class Pyprol(object):
-    def __init__(self, app, config=None):
+    def __init__(self, config=None):
         self.config = Configuration(config)
 
         self.storage = StorageFactory(self.config).storage()
@@ -25,6 +25,6 @@ class Pyprol(object):
     def __del__(self):
         measurement.shutdown()
 
-def inject(config):
+def inject(global_conf, **config):
     _pyprol = Pyprol(config)
 

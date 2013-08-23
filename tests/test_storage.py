@@ -106,3 +106,9 @@ class StorageFactoryTestCase(TestCase):
 
         self.assertEqual(fac, factory.StorageFactory(self.config))
 
+    def test_factory(self):
+        fac = factory.StorageFactory(self.config)
+        storage = fac.storage()
+
+        self.assertNotNone(storage)
+

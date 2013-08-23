@@ -1,8 +1,3 @@
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
-
 from . import server_storage, sqlite_storage, console_storage
 
 
@@ -19,6 +14,7 @@ class StorageFactory(object):
             except TypeError:
                 cls._instance = super(StorageFactory, cls).__new__(cls, config)
 
+        print(cls._instance)
         return cls._instance
 
     def __init__(self, config):
@@ -26,12 +22,12 @@ class StorageFactory(object):
         self.config = config
 
     def storage(self):
-        if _storage is None:
-            parsed = urlparse(getattr(self.config, "storage_endpoint"))
-            for storage_impl in _storage_impls:
+        if self._storage is None:
+            parsed = getattr(self.config, "storage_endpoint")
+            for storage_impl in self._storage_impls:
                 for scheme in storage_impl.SCHEME:
                     if parsed.scheme == scheme:
-                        _storage = storage_impl(config, parsed)
+                        self._storage = storage_impl(self.config)
 
-        return storage
+        return self._storage
 

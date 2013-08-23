@@ -31,7 +31,7 @@ class Configuration(object):
     instrumentations = None
     storage_endpoint = None
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         if config is not None:
             self.config = config_filter(config)
 

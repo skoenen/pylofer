@@ -37,7 +37,8 @@ def timing_stat():
 
 class Configuration:
     def __init__(self, config=None):
-        self.storage_endpoint = "sqlite://$HOME/pyprol_tests_sqlite_storage"
+        self.storage_endpoint = urlparse(
+                "sqlite://$HOME/pyprol_tests_sqlite_storage")
 
         self.measure = OptionContainer()
         self.measure.save_process_wait = 0.01
