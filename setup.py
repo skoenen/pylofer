@@ -1,4 +1,4 @@
-from distutils import setup
+from setuptools import setup
 
 setup(
     name="pyprol",
@@ -8,7 +8,7 @@ setup(
     author_email="stefan.koenen@uni-duesseldorf.de",
     url="https://github.com/skoenen/pyprol",
     packages=['pyprol'],
-    entry_points={'paste.app_factory': ['main=pyprol.inject']},
+    entry_points={'paste.filter_factory': ['main=pyprol.inject']},
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',
@@ -24,7 +24,5 @@ setup(
         'Topic :: Software Development :: Profiling'
         ],
     install_requires=[
-        'yappi ==0.62',
-        'sqlalchemy ==0.8'
-        ]
+        'setuptools']
     )

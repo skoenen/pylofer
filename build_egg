@@ -1,0 +1,10 @@
+#!/bin/bash
+
+python=$(which python2)
+echo "BUILD egg for python 2"
+$python ./setup.py bdist_egg
+
+python=$(which python3)
+echo "BUILD egg for python 3"
+$python ./setup.py bdist_egg
+
