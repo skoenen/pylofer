@@ -1,5 +1,11 @@
-from utils import as_bool
-import instrumentations as builtin_instrumentations
+from .utils import as_bool
+
+from . import instrumentations as builtin_instrumentations
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 __all__ = ["Configuration", "config_filter", "instrumentation_list"]
@@ -71,6 +77,7 @@ class Configuration(object):
                 setattr(base, 'instrumentations', instrumentation_list(value))
 
             elif key == "storage":
+                value = urlparse(value)
                 setattr(base, 'storage_endpoint', value)
 
             else:

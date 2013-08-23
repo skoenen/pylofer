@@ -1,17 +1,16 @@
-from configuration import Configuration
-from storage.factory import StorageFactory
+from .configuration import Configuration
+from .storage.factory import StorageFactory
+from . import measurement
 
-import measurement
 
-
-__all__ = ['Pyprol']
+_pyprol = None
 
 class Pyprol(object):
     def __init__(self, app, config=None):
         self.config = Configuration(config)
 
         self.storage = StorageFactory(self.config).storage()
-        measure_init(self.storage)
+        measurement.init(self.storage)
 
         for instrument in self.config.instruments:
             instrument_module = __import__(instrument)
@@ -25,3 +24,7 @@ class Pyprol(object):
 
     def __del__(self):
         measurement.shutdown()
+
+def inject(config):
+    _pyprol = Pyprol(config)
+

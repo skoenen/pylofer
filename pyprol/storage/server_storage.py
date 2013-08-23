@@ -1,6 +1,9 @@
-from socketserver import ThreadingUDPServer, ThreadingUnixDatagramServer, DatagramRequestHandler
-from utils.socket_client import client_from_url
+from pyprol.utils.socket_client import client_from_url
 
+try:
+    from socketserver import ThreadingUDPServer, ThreadingUnixDatagramServer, DatagramRequestHandler
+except ImportError:
+    from SocketServer import ThreadingUDPServer, ThreadingUnixDatagramServer, DatagramRequestHandler
 
 __all__ = ['ServerStorage']
 

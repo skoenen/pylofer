@@ -1,4 +1,4 @@
-import measurement
+from pyprol.measurement import measurement
 
 
 def inject():

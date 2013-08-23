@@ -1,4 +1,4 @@
-from utils.introspection import respond_to
+from .introspection import respond_to
 
 
 def as_bool(obj):

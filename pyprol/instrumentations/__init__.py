@@ -1,2 +1,2 @@
-from instrumentations import paste, sqlalchemy, pylons
+from . import paste, sqlalchemy, pylons
 

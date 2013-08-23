@@ -1,4 +1,5 @@
-from storage.factory import StorageFactory
+from pyprol.storage.factory import StorageFactory
+
 from multiprocessing import Process, Queue
 from collections import namedtuple
 from cProfile import Profile
@@ -14,13 +15,15 @@ _save_process = None
 
 TimingStat = namedtuple(
         "TimingStat",
-        ["code", "call_count", "time_total", "time_function", "calls"])
+        ["code",
+        "call_count",
+        "recursive_call_count",
+        "time_total",
+        "time_function",
+        "calls"])
 
 class Measure:
     _save_queue = None
-
-    point_name = None
-    timings = None
 
     def __init__(self, measure_point_name, save_queue):
         self.point_name = measure_point_name
@@ -35,8 +38,6 @@ class Measure:
         self._profile.disable()
         stat = self._profile.getstats()[0]
 
-        self.timings = TimingStat(stat.callcount, stat.reccallcount,
-                stat.totaltime, stat.inlinetime, stat.calls)
         return self
 
     def save(self):
@@ -45,12 +46,13 @@ class Measure:
 
     def transform(self):
         calls = []
-        for call in self.timings.calls:
+        for call in self.stat.calls:
             calls.append(TimingStat(call.code, call.callcount,
                     call.reccallcount, call.totaltime, call.inlinetime, None))
 
-        self.timings.calls = calls
-
+        self.timing = TimingStat(
+                self.stat.callcount, self.stat.reccallcount,
+                self.stat.totaltime, self.stat.inlinetime, calls)
 
 def enable(measure_point_name):
     return Measure(measure_point_name, _save_queue).start()
