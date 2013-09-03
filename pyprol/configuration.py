@@ -52,7 +52,7 @@ class Configuration(object):
             for instrument in dir(builtin_instrumentations):
                 if not instrument.startswith("_"):
                     self.instrumentations.append(
-                            "instrumentations.{0}".format(instrument))
+                            "pyprol.instrumentations.{0}".format(instrument))
 
         if not hasattr(self, 'measure'):
             setattr(self, 'measure', OptionContainer())

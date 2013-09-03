@@ -1,6 +1,6 @@
 from pyprol.measurement import measurement
 
 
-def inject():
+def inject(config):
     pass
 

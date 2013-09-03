@@ -1,12 +1,16 @@
 #!/bin/bash
 
 python="$(which python2)"
-echo "RUNNING Tests in python 2"
-echo "$python"
+echo ""
+echo "###### RUNNING Tests in python 2 ######"
+echo ""
 $python -m unittest tests
 
-python="$(which python3)"
-echo "RUNNING Tests in python 3"
-echo "$python"
-$python -m unittest
+if [ $? -eq 0 ]; then
+  python="$(which python3)"
+  echo ""
+  echo "###### Running Tests in python 3 ######"
+  echo ""
+  $python -m unittest
+fi
 

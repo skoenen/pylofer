@@ -5,8 +5,8 @@ import json
 import os
 import sqlite3
 
+from pyprol.storage import Storage
 from pyprol.storage import sqlite_storage
-from pyprol.storage import factory
 
 #from pyprol.storage import server_storage
 #from pyprol.storage import console_storage
@@ -89,26 +89,37 @@ class SQLiteStorageTestCase(TestCase):
         storage.save(measure)
         del(storage)
 
-        conn = sqlite3.connect(self.config.storage_endpoint.path)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM timings;")
-        result = cur.fetchall()
+        with sqlite3.connect(self.config.storage_endpoint.path) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM timings;")
+            result = cur.fetchall()
 
-        for row in result:
-            self.assertTimingEntry(measure, row)
+            self.assertTrue(len(result) > 0)
+            for row in result:
+                self.assertTimingEntry(measure, row)
+
+    def test_save_with(self):
+        measure = fixture.Measure()
+
+        with sqlite_storage.SQLiteStorage(self.config) as storage:
+            storage.save(measure)
+
+        with sqlite3.connect(self.config.storage_endpoint.path) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM timings;")
+            result = cur.fetchall()
+
+            self.assertTrue(len(result) > 0)
+            for row in result:
+                self.assertTimingEntry(measure, row)
+
 
 class StorageFactoryTestCase(TestCase):
     def setUp(self):
         self.config = fixture.Configuration()
 
     def test_singleton(self):
-        fac = factory.StorageFactory(self.config)
-
-        self.assertEqual(fac, factory.StorageFactory(self.config))
-
-    def test_factory(self):
-        fac = factory.StorageFactory(self.config)
-        storage = fac.storage()
-
-        self.assertNotNone(storage)
+        storage_test = Storage(self.config)
+        self.assertEqual(storage_test, Storage())
+        self.assertIsInstance(storage_test, sqlite_storage.SQLiteStorage)
 

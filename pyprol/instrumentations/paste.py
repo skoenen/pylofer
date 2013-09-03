@@ -1,18 +1,21 @@
 from pyprol.measurement import measurement
 
+import importlib
+
 
 def inject(config):
     try:
-        from paste import WSGIHandlerMixin
+        paste_httpserver = importlib.import_module('paste.httpserver')
 
-        class WSGIHandlerMixin:
-            _org_wsgi_start_respone = wsgi_start_response
+        _org_wsgi_start_respone = paste_httpserver.WSGIHandlerMixin.wsgi_start_response
 
-            def wsgi_start_response(self, status, response_headers, exc_info=None):
-                measure = measurement.enable(__name__)
-                result = _org_wsgi_start_respone(status, response_headers, exc_info)
-                measurement.disable(measure)
-                return result
+        def wsgi_start_response(self, status, response_headers, exc_info=None):
+            measure = measurement.enable(__name__)
+            result = _org_wsgi_start_respone(self, status, response_headers, exc_info)
+            measurement.disable(measure)
+            return result
+
+        paste_httpserver.WSGIHandlerMixin.wsgi_start_response = wsgi_start_response
 
     except ImportError:
         from logging import getLogger

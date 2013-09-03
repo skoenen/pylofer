@@ -17,5 +17,5 @@ def inject(config):
 
     except ImportError:
         from logging import getLogger
-        getLogger().info("No `pylons` in this context.")
+        getLogger(__name__).info("No `pylons` in this context.")
 

@@ -25,9 +25,9 @@ class ConfigurationTestCase(TestCase):
         self.instrumentations = [
                 "some.instrumentations.config",
                 "some.instrumentations.runner",
-                "instrumentations.paste",
-                "instrumentations.pylons",
-                "instrumentations.sqlalchemy"]
+                "pyprol.instrumentations.paste",
+                "pyprol.instrumentations.pylons",
+                "pyprol.instrumentations.sqlalchemy"]
 
         self.storage_endpoint = urlparse("sqlite://$HOME/pyprol_test.db")
 

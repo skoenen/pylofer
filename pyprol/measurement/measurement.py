@@ -1,4 +1,4 @@
-from pyprol.storage.factory import StorageFactory
+from pyprol.storage import Storage
 
 from multiprocessing import Process, Queue
 from collections import namedtuple
@@ -23,8 +23,6 @@ TimingStat = namedtuple(
         "calls"])
 
 class Measure:
-    _save_queue = None
-
     def __init__(self, measure_point_name, save_queue):
         self.point_name = measure_point_name
         self._save_queue = save_queue
@@ -55,45 +53,61 @@ class Measure:
                 self.stat.totaltime, self.stat.inlinetime, calls)
 
 def enable(measure_point_name):
+    global _save_queue
     return Measure(measure_point_name, _save_queue).start()
 
 def disable(measure):
     return measure.stop().save()
 
-def _save_measurement(config, queue):
-    shutdown = False
-    storage = StorageFactory(config).storage()
-    queue_timeout = config.measure.save_process_wait
+class SaveProcess(Process):
+    def __init__(self, config, save_queue, *args, **kwargs):
+        self._save_queue = save_queue
+        self._config = config
+        super(SaveProcess, self).__init__(*args, **kwargs)
 
-    def handle_term():
-        storage.close()
-        shutdown = True
-        queue_timeout = 0.001
-    signal.signal(signal.SIGTERM, handle_term)
+    def run(self):
+        shutdown = False
+        timeout = self._config.measure.save_process_wait
 
-    while not shutdown:
-        try:
-            measure = queue.get(queue_timeout)
-            measure.transform()
-            storage.save(measure)
-        except Queue.Empty:
-            pass
+        # Define handler for the `terminate` signal and assign it.
+        def handle_term():
+            shutdown = True
+            timeout = 0.001
+        signal.signal(signal.SIGTERM, handle_term)
+
+        # Wait `pyprol.measure.save_process_wait` time for a save request from
+        # the measured process.
+        # The timeout is needed, that this can react on the terminate signal.
+        with Storage(self._config) as storage:
+            print(self._save_queue)
+            while not shutdown and not self._save_queue.empty():
+                try:
+                    measure = self._save_queue.get(timeout)
+                    measure.transform()
+                    storage.save(measure)
+                except Queue.Empty:
+                    pass
 
 
-def init(storage):
+def init(config):
+    global _save_queue
+    global _save_process
+
     if _save_queue is None:
         _save_queue = Queue()
 
     if _save_process is None:
-        _save_process = Process(target=_save_measurement,
-                args=(storage, _save_queue))
-
+        _save_process = SaveProcess(config, _save_queue)
         _save_process.start()
 
 def shutdown():
-    while not _save_queue.empty():
-        time.sleep(0.01)
+    global _save_queue
+    global _save_process
 
     _save_process.terminate()
     _save_process.join()
     _save_queue.close()
+
+    _save_process = None
+    _save_queue = None
+

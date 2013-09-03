@@ -6,6 +6,7 @@ except ImportError:
 import sqlite3
 import os
 import re
+import sys
 
 from collections import namedtuple
 from json import dumps as encode_to_string
@@ -60,8 +61,10 @@ class SQLiteStorage(object):
         try:
             self.conn = sqlite3.connect(path)
         except sqlite3.OperationalError:
+            _, error, _ = sys.exc_info()
             raise RuntimeError(
-                    "Can not open pyprol sqlite database '{}'".format(path))
+                    ("Can not open pyprol sqlite database '{0}', "
+                    "because of '{1}'").format(path, error))
 
         for create_query in self.create_tables:
             self.conn.execute(create_query)
@@ -82,10 +85,18 @@ class SQLiteStorage(object):
             self.conn.execute(self.insert_timing, timing_entry)
             self.conn.commit()
 
-    def __del__(self):
+    def close(self):
         if hasattr(self, "conn"):
             self.conn.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
 def var_expand(string):
     return re.sub(r"\$([A-Z_0-9]+[A-Z0-9])", lambda m: os.environ[m.group(1)], string)
+
+IMPL = SQLiteStorage
 
