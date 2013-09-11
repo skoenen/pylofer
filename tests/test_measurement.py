@@ -1,9 +1,24 @@
 from unittest import TestCase
 from tests import fixture
+from datetime import datetime
 from pyprol import measurement
 
 import sys
+import os
 
+class TimingStatTestCase(TestCase):
+    def test_timingstat(self):
+        obj = measurement.TimingStat(
+                datetime.utcnow(), "test", "test.code.py", 1, 0, 0.4, 0.2, None)
+
+        assert hasattr(obj, 'timestamp')
+        assert hasattr(obj, 'name')
+        assert hasattr(obj, 'code')
+        assert hasattr(obj, 'call_count')
+        assert hasattr(obj, 'recursive_call_count')
+        assert hasattr(obj, 'time_total')
+        assert hasattr(obj, 'time_function')
+        assert hasattr(obj, 'calls')
 
 class MeasurementTestCase(TestCase):
     def assertEqualTiming(self, a, b):
@@ -17,7 +32,7 @@ class MeasurementTestCase(TestCase):
         if a.calls is not None and b.calls is not None:
             try:
                 # Check if we should use the python 2 xrange function
-                indexes = xrange(0,len(a.calls))
+                indexes = xrange(0, len(a.calls))
             except NameError:
                 # Use the xrange function, that is named range in python 3
                 indexes = range(0, len(a.calls))
@@ -30,8 +45,16 @@ class MeasurementTestCase(TestCase):
         self.assertIsInstance(b, measurement.Measure)
 
         self.assertEqual(a.point_name, b.point_name)
-        if hasattr(a, "timing") and hasattr(b, "timing"):
-            self.assertEqualTiming(a.timing, b.timing)
+        if hasattr(a, "timings") and hasattr(b, "timings"):
+            self.assertEqual(len(a.timings), len(b.timings))
+
+            try:
+                indexes = xrange(0, len(a.timings))
+            except NameError:
+                indexes = range(0, len(a.timings))
+
+            for i in indexes:
+                self.assertEqualTiming(a.timings[i], b.timings[i])
 
         elif hasattr(a, "timing"):
             assert False
@@ -58,7 +81,7 @@ class MeasurementTestCase(TestCase):
 
         recv_measure = measurement.Measure(data=queue.get())
 
-        self.assertEqual(recv_measure.timing, send_measure.timing)
+        self.assertEqual(recv_measure.timings, send_measure.timings)
         self.assertEqual(recv_measure.point_name, send_measure.point_name)
 
     def test_enable_disable(self):
@@ -71,5 +94,4 @@ class MeasurementTestCase(TestCase):
         measurement.shutdown()
 
         self.assertEqualMeasure(fixture.Storage().last(), measure)
-        self.assertIn("nop", fixture.Storage().last().timing.code)
 

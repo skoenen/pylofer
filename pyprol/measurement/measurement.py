@@ -3,6 +3,7 @@ from pyprol.storage import Storage
 from multiprocessing import Process, Manager, Queue
 from collections import namedtuple
 from cProfile import Profile
+from datetime import datetime
 from logging import getLogger
 
 import json
@@ -15,7 +16,7 @@ except ImportError:
     from Queue import Empty as QueueEmptyException
 
 
-__all__ = ['Measure', 'enable', 'disable', 'init', 'shutdown']
+__all__ = ['Measure', 'TimingStat', 'enable', 'disable', 'init', 'shutdown']
 
 log = getLogger(__name__)
 
@@ -25,12 +26,8 @@ _save_process = None
 
 TimingStat = namedtuple(
         "TimingStat",
-        ["code",
-        "call_count",
-        "recursive_call_count",
-        "time_total",
-        "time_function",
-        "calls"])
+        ["timestamp", "name", "code", "call_count", "recursive_call_count",
+        "time_total", "time_function", "calls"])
 
 class Measure:
     def __init__(self,
@@ -46,7 +43,7 @@ class Measure:
             self.load(data[1])
 
     def load(self, data):
-        self.timing = data
+        self.timings = data
 
     def start(self):
         self._profile.enable()
@@ -54,33 +51,38 @@ class Measure:
 
     def stop(self):
         self._profile.disable()
-        self.stat = self._profile.getstats()[0]
+        self.stats = self._profile.getstats()
+        self.timings = list()
+
+        for stat in self.stats:
+            if stat.calls is not None:
+                calls = list()
+                for call in stat.calls:
+                    calls.append(TimingStat(datetime.utcnow(), self.point_name,
+                            str(call.code), call.callcount, call.reccallcount,
+                            call.totaltime, call.inlinetime, None))
+            else:
+                calls = None
+
+            self.timings.append(
+                    TimingStat(
+                            datetime.utcnow(), self.point_name, str(stat.code),
+                            stat.callcount, stat.reccallcount, stat.totaltime,
+                            stat.inlinetime, calls))
+
         return self
 
     def save(self):
-        if self.stat.calls is not None:
-            calls = []
-            for call in self.stat.calls:
-                calls.append(TimingStat(str(call.code), call.callcount,
-                        call.reccallcount, call.totaltime, call.inlinetime,
-                        None))
-        else:
-            calls = None
-
-        self.timing = TimingStat( str(self.stat.code), self.stat.callcount,
-                self.stat.reccallcount, self.stat.totaltime,
-                self.stat.inlinetime, calls)
-
-        self._save_queue.put_nowait((self.point_name, self.timing))
+        self._save_queue.put_nowait((self.point_name, self.timings))
         return self
 
     def __str__(self):
         buf = "<{0}: point_name='{1}'".format(
                 self.__class__, self.point_name)
         if hasattr(self, "stat"):
-            buf += ", stat='{}'".format(self.stat)
+            buf += ", stat='{}'".format(self.stats)
         if hasattr(self, "timing"):
-            buf += ", timing='{}'".format(self.timing)
+            buf += ", timing='{}'".format(self.timings)
         buf += ">"
         return buf
 

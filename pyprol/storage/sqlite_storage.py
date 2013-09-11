@@ -17,13 +17,8 @@ __all__ = ['SQLiteStorage']
 SCHEME = ('sqlite', 'sqlite3')
 
 TimingTableEntry = namedtuple("TimingTableEntry",
-        ["timestamp",
-        "name",
-        "call_count",
-        "recursive_call_count",
-        "time_total",
-        "time_function",
-        "call_stack"])
+        ["timestamp", "name", "code", "call_count", "recursive_call_count",
+        "time_total", "time_function", "call"])
 
 class SQLiteStorage(object):
     """ Storage implementation to save measure values in a sqlite database.
@@ -41,17 +36,18 @@ class SQLiteStorage(object):
             ("CREATE TABLE IF NOT EXISTS timings ("
             "timestamp TEXT, "
             "measure_point VARCHAR(255) NOT NULL, "
+            "code VARCHAR(255) NOT NULL, "
             "call_count INTEGER, "
             "recursive_call_count INTEGER, "
             "time_total REAL, "
             "time_function REAL, "
-            "call_stack TEXT)")]
+            "calls TEXT)")]
 
     insert_timing = ("INSERT INTO timings "
-                    "(timestamp, measure_point, call_count, "
+                    "(timestamp, measure_point, code, call_count, "
                     "recursive_call_count, time_total, "
-                    "time_function, call_stack) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)")
+                    "time_function, calls) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 
     def __init__(self, config):
         self.config = config
@@ -72,17 +68,19 @@ class SQLiteStorage(object):
         self.conn.commit()
 
     def save(self, measure):
-        if hasattr(measure, 'timing'):
-            timing_entry = TimingTableEntry(
-                    measure.timestamp,
-                    measure.name,
-                    measure.timing.call_count,
-                    measure.timing.recursive_call_count,
-                    measure.timing.time_total,
-                    measure.timing.time_function,
-                    encode_to_string(measure.timing.call_stack))
+        if hasattr(measure, 'timings'):
+            for timing in measure.timings:
+                timing_entry = TimingTableEntry(
+                        timing.timestamp.isoformat(),
+                        timing.name,
+                        timing.code,
+                        timing.call_count,
+                        timing.recursive_call_count,
+                        timing.time_total,
+                        timing.time_function,
+                        encode_to_string(timing.calls))
 
-            self.conn.execute(self.insert_timing, timing_entry)
+                self.conn.execute(self.insert_timing, timing_entry)
             self.conn.commit()
 
     def close(self):

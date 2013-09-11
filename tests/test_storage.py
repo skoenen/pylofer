@@ -19,26 +19,22 @@ except ImportError:
 
 
 class SQLiteStorageTestCase(TestCase):
-    def assertTimingEntry(self, a, b):
-        if isinstance(a, (fixture.Measure)):
-            measure_list = (str(a.timestamp), a.name, a.timing.call_count,
-                            a.timing.recursive_call_count, a.timing.time_total,
-                            a.timing.time_function,
-                            json.dumps(a.timing.call_stack))
+    def assertMeasureAndResult(self, measure, result):
+        db_repr = measure.to_db_repr()
 
-            assert len(measure_list) == len(b)
-            assert measure_list == b
-        else:
-            measure_list = (str(b.timestamp), b.name, b.timing.call_count,
-                            b.timing.recursive_call_count, b.timing.time_total,
-                            b.timing.time_function,
-                            json.dumps(b.timing.call_stack))
+        self.assertNotEqual(len(result), 0)
+        self.assertEqual(len(result), len(db_repr))
+        try:
+            indexes = xrange(0, len(db_repr))
+        except NameError:
+            indexes = range(0, len(db_repr))
 
-            assert len(measure_list) == len(a)
-            assert measure_list == a
+        for i in indexes:
+            assert len(db_repr[i]) == len(result[i])
+            assert db_repr[i] == result[i]
 
     def setUp(self):
-        self.db_path = "{}/pyprol_tests_sqlite_storage.db".format(os.environ["HOME"])
+        self.db_path = "{}/pyprol_tests_sqlite_storage".format(os.environ["HOME"])
 
         self.config = fixture.Configuration()
         self.config.storage_endpoint = urlparse(
@@ -94,9 +90,7 @@ class SQLiteStorageTestCase(TestCase):
             cur.execute("SELECT * FROM timings;")
             result = cur.fetchall()
 
-            self.assertTrue(len(result) > 0)
-            for row in result:
-                self.assertTimingEntry(measure, row)
+            self.assertMeasureAndResult(measure, result)
 
     def test_save_with(self):
         measure = fixture.Measure()
@@ -109,10 +103,7 @@ class SQLiteStorageTestCase(TestCase):
             cur.execute("SELECT * FROM timings;")
             result = cur.fetchall()
 
-            self.assertTrue(len(result) > 0)
-            for row in result:
-                self.assertTimingEntry(measure, row)
-
+            self.assertMeasureAndResult(measure, result)
 
 class StorageFactoryTestCase(TestCase):
     def setUp(self):
