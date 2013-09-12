@@ -78,8 +78,22 @@ class SQLiteStorageTestCase(TestCase):
         with self.assertRaises(RuntimeError):
             storage = sqlite_storage.SQLiteStorage(self.config)
 
-    def test_save_timing(self):
+    def test_save_regular_timing(self):
         measure = fixture.Measure()
+
+        storage = sqlite_storage.SQLiteStorage(self.config)
+        storage.save(measure)
+        del(storage)
+
+        with sqlite3.connect(self.config.storage_endpoint.path) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM timings;")
+            result = cur.fetchall()
+
+            self.assertMeasureAndResult(measure, result)
+
+    def test_save_timing_no_subcalls(self):
+        measure = fixture.Measure(calls=False)
 
         storage = sqlite_storage.SQLiteStorage(self.config)
         storage.save(measure)

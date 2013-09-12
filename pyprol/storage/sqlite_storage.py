@@ -7,9 +7,9 @@ import sqlite3
 import os
 import re
 import sys
+import json
 
 from collections import namedtuple
-from json import dumps as encode_to_string
 
 
 __all__ = ['SQLiteStorage']
@@ -18,7 +18,19 @@ SCHEME = ('sqlite', 'sqlite3')
 
 TimingTableEntry = namedtuple("TimingTableEntry",
         ["timestamp", "name", "code", "call_count", "recursive_call_count",
-        "time_total", "time_function", "call"])
+        "time_total", "time_function", "calls"])
+
+def encode_timing_stat_calls(calls):
+    coded_calls = None
+    if calls is not None:
+        coded_calls = list()
+        for call in calls:
+            coded_calls.append(
+                    (call.timestamp.isoformat(), call.name, call.code,
+                    call.call_count, call.recursive_call_count, call.time_total,
+                    call.time_function, call.calls))
+
+    return json.dumps(coded_calls)
 
 class SQLiteStorage(object):
     """ Storage implementation to save measure values in a sqlite database.
@@ -78,7 +90,7 @@ class SQLiteStorage(object):
                         timing.recursive_call_count,
                         timing.time_total,
                         timing.time_function,
-                        encode_to_string(timing.calls))
+                        encode_timing_stat_calls(timing.calls))
 
                 self.conn.execute(self.insert_timing, timing_entry)
             self.conn.commit()

@@ -38,17 +38,13 @@ TimingStat = namedtuple(
 def nop():
     pass
 
-def timing_stat(name=None, max_call=None, max_tt=None):
+def timing_stat(name=None, max_tt=None, sub_calls=True):
     min_time = 0.0000001
 
     if name is None:
         name = "test"
 
-    if max_call is not None:
-        call_count = random.randint(1, max_call)
-    else:
-        call_count = random.randint(1, 100)
-
+    call_count = random.randint(1, 100)
     rec_call_count = random.randint(0, call_count-1)
 
     if max_tt is not None:
@@ -58,11 +54,9 @@ def timing_stat(name=None, max_call=None, max_tt=None):
 
     time_function = random.uniform(0.0000001, time_total)
 
-    if max_call is None:
-        calls = [timing_stat(name,
-                        call_count -1, (time_total - time_function) /2),
-                timing_stat(name,
-                        call_count -2, (time_total - time_function) /2)]
+    if max_tt is None and sub_calls:
+        calls = [timing_stat(name, (time_total - time_function) /2),
+                timing_stat(name, (time_total - time_function) /2)]
     else:
         calls = None
 
@@ -79,7 +73,7 @@ class Configuration:
         self.measure.save_process_wait = 0.01
 
 class Measure:
-    def __init__(self):
+    def __init__(self, calls=True):
         self.name = "run_test"
         self.timestamp = datetime.utcnow()
 
@@ -90,7 +84,19 @@ class Measure:
 
         self.timings = list()
         for i in indexes:
-            self.timings.append(timing_stat(self.name))
+            self.timings.append(timing_stat(self.name, calls))
+
+    def encode_timing_calls(self, calls):
+        coded_calls = None
+        if calls is not None:
+            coded_calls = list()
+            for call in calls:
+                coded_calls.append(
+                        (call.timestamp.isoformat(), call.name, call.code,
+                        call.call_count, call.recursive_call_count, call.time_total,
+                        call.time_function, call.calls))
+
+        return json.dumps(coded_calls)
 
     def to_db_repr(self):
         timing_list = list()
@@ -102,7 +108,7 @@ class Measure:
                     timing.call_count, timing.recursive_call_count,
                     timing.time_total,
                     timing.time_function,
-                    _str(json.dumps(timing.calls))))
+                    _str(self.encode_timing_calls(timing.calls))))
 
         return timing_list
 
