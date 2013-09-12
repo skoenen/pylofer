@@ -1,7 +1,7 @@
 # pyprol - Python Performance Measurement System
 
-STATE: 2 - pre-alpha
-Version: -.-.-
+STATE: 3 - Alpha
+Version: 0.1.0
 
 This hooks up to some points in various frameworks to measure several aspects
 of execution of code.
@@ -11,6 +11,23 @@ paster `WSGIHandlerMixin`, pylons 'WSGIControler'.
 
 To store the optained values in a way mostly unaffecting the application, the
 values are send over udp to an server.
+
+## Usage:
+
+`paster deploy`:
+
+Add a filter to your application as following:
+
+    ...
+
+    [pipeline:default]
+    pipeline = pyprol app
+
+    [filter:pyprol]
+    use = egg:pyprol
+    pyprol.storage = `<sqlite storage location goes here>` # One can use environment variables.
+
+    ...
 
 ## Configuration:
 

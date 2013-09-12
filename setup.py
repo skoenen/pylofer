@@ -20,7 +20,7 @@ setup(
               'pyprol.utils'],
     entry_points={'paste.filter_factory': ['main=pyprol:inject']},
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Environment :: Server',
         'Intended Audience :: Developer',
