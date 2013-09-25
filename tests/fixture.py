@@ -31,18 +31,22 @@ except NameError:
 
 TimingStat = namedtuple(
         "TimingStat",
-        ["timestamp", "name", "code", "call_count", "recursive_call_count",
-        "time_total", "time_function", "calls"])
+        ["timestamp", "session", "name", "code",
+        "call_count", "recursive_call_count", "time_total", "time_function",
+        "calls"])
 
 # Just do nothing to measure a function
 def nop():
     pass
 
-def timing_stat(name=None, max_tt=None, sub_calls=True):
+def timing_stat(name=None, session=None, sub_calls=True, max_tt=None):
     min_time = 0.0000001
 
     if name is None:
         name = "test"
+
+    if session is None:
+        session = name
 
     call_count = random.randint(1, 100)
     rec_call_count = random.randint(0, call_count-1)
@@ -55,14 +59,16 @@ def timing_stat(name=None, max_tt=None, sub_calls=True):
     time_function = random.uniform(0.0000001, time_total)
 
     if max_tt is None and sub_calls:
-        calls = [timing_stat(name, (time_total - time_function) /2),
-                timing_stat(name, (time_total - time_function) /2)]
+        calls = [timing_stat(name, session, False,
+                        (time_total - time_function) /2),
+                timing_stat(name, session, False,
+                        (time_total - time_function) /2)]
     else:
         calls = None
 
     return TimingStat(
-            datetime.utcnow(), name, "test.py", call_count, rec_call_count,
-            time_total, time_function, calls)
+            datetime.utcnow(), session, name, "test.py", call_count,
+            rec_call_count, time_total, time_function, calls)
 
 class Configuration:
     def __init__(self, config=None):
@@ -73,9 +79,14 @@ class Configuration:
         self.measure.save_process_wait = 0.01
 
 class Measure:
-    def __init__(self, calls=True):
+    def __init__(self, session=None, calls=True):
         self.name = "run_test"
         self.timestamp = datetime.utcnow()
+
+        if session is None:
+            self.measure_session = self.name
+        else:
+            self.measure_session = session
 
         try:
             indexes = xrange(0, 5)
@@ -84,7 +95,8 @@ class Measure:
 
         self.timings = list()
         for i in indexes:
-            self.timings.append(timing_stat(self.name, calls))
+            self.timings.append(timing_stat(self.name, self.measure_session,
+                    calls))
 
     def encode_timing_calls(self, calls):
         coded_calls = None
@@ -92,26 +104,45 @@ class Measure:
             coded_calls = list()
             for call in calls:
                 coded_calls.append(
-                        (call.timestamp.isoformat(), call.name, call.code,
-                        call.call_count, call.recursive_call_count, call.time_total,
+                        (call.timestamp.isoformat(), self.measure_session,
+                        call.name, call.code, call.call_count,
+                        call.recursive_call_count, call.time_total,
                         call.time_function, call.calls))
 
         return json.dumps(coded_calls)
 
-    def to_db_repr(self):
-        timing_list = list()
+    def to_tuple(self):
+        res = list()
 
         for timing in self.timings:
-            timing_list.append(
+            res.append(
                     (_str(timing.timestamp.isoformat()),
-                    _str(self.name), _str(timing.code),
-                    timing.call_count, timing.recursive_call_count,
+                    _str(self.measure_session),
+                    _str(self.name),
+                    _str(timing.code),
+                    timing.call_count,
+                    timing.recursive_call_count,
                     timing.time_total,
                     timing.time_function,
-                    _str(self.encode_timing_calls(timing.calls))))
+                    self._calls_tuple(timing)))
 
-        return timing_list
+        return tuple(res)
 
+    def _calls_tuple(self, timing):
+        call_list = list()
+
+        if timing.calls is not None:
+            for call in timing.calls:
+                call_list.append(
+                        (_str(call.timestamp.isoformat()),
+                        _str(self.name),
+                        _str(call.code),
+                        call.call_count,
+                        call.recursive_call_count,
+                        call.time_total,
+                        call.time_function))
+
+        return tuple(call_list)
 
 class OptionContainer:
     pass

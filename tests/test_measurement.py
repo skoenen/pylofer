@@ -9,9 +9,11 @@ import os
 class TimingStatTestCase(TestCase):
     def test_timingstat(self):
         obj = measurement.TimingStat(
-                datetime.utcnow(), "test", "test.code.py", 1, 0, 0.4, 0.2, None)
+                    datetime.utcnow(), "testing", "test", "test.code.py", 1, 0,
+                    0.4, 0.2, None)
 
         assert hasattr(obj, 'timestamp')
+        assert hasattr(obj, 'session')
         assert hasattr(obj, 'name')
         assert hasattr(obj, 'code')
         assert hasattr(obj, 'call_count')
@@ -76,7 +78,7 @@ class MeasurementTestCase(TestCase):
 
     def test_save_load(self):
         queue = fixture.Queue()
-        send_measure = measurement.Measure("testing", queue)
+        send_measure = measurement.Measure("testing", "run_test", queue)
         send_measure.start().stop().save()
 
         recv_measure = measurement.Measure(data=queue.get())

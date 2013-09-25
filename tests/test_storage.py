@@ -19,19 +19,50 @@ except ImportError:
 
 
 class SQLiteStorageTestCase(TestCase):
-    def assertMeasureAndResult(self, measure, result):
-        db_repr = measure.to_db_repr()
+    def assertMeasureAndResultTimings(self, measure, result):
+        measure_tuple = measure.to_tuple()
+
+        timings = list()
+        for timing in measure_tuple:
+            timings.append(timing[0:-1])
+
+        db_timings = list()
+        for db_timing in result:
+            db_timings.append(db_timing[1:])
 
         self.assertNotEqual(len(result), 0)
-        self.assertEqual(len(result), len(db_repr))
+        self.assertEqual(len(db_timings), len(timings))
         try:
-            indexes = xrange(0, len(db_repr))
+            indexes = xrange(0, len(timings))
         except NameError:
-            indexes = range(0, len(db_repr))
+            indexes = range(0, len(timings))
 
         for i in indexes:
-            assert len(db_repr[i]) == len(result[i])
-            assert db_repr[i] == result[i]
+            assert len(timings[i]) == len(db_timings[i])
+            assert timings[i] == db_timings[i]
+
+    def assertMeasureAndResultCalls(self, measure, result):
+        measure_tuple = measure.to_tuple()
+
+        calls = list()
+        for timing in measure_tuple:
+            for call in timing[-1]:
+                calls.append(call)
+
+        db_calls = list()
+        for db_call in result:
+            db_calls.append(db_call[1:])
+
+        self.assertNotEqual(len(db_calls), 0)
+        self.assertEqual(len(db_calls), len(calls))
+        try:
+            indexes = xrange(0, len(calls))
+        except NameError:
+            indexes = range(0, len(calls))
+
+        for i in indexes:
+            assert len(calls[i]) == len(db_calls[i])
+            assert calls[i] == db_calls[i]
 
     def setUp(self):
         self.db_path = "{}/pyprol_tests_sqlite_storage".format(os.environ["HOME"])
@@ -90,7 +121,12 @@ class SQLiteStorageTestCase(TestCase):
             cur.execute("SELECT * FROM timings;")
             result = cur.fetchall()
 
-            self.assertMeasureAndResult(measure, result)
+            self.assertMeasureAndResultTimings(measure, result)
+
+            cur.execute("SELECT * FROM timings_calls;")
+            result = cur.fetchall()
+
+            self.assertMeasureAndResultCalls(measure, result)
 
     def test_save_timing_no_subcalls(self):
         measure = fixture.Measure(calls=False)
@@ -104,7 +140,12 @@ class SQLiteStorageTestCase(TestCase):
             cur.execute("SELECT * FROM timings;")
             result = cur.fetchall()
 
-            self.assertMeasureAndResult(measure, result)
+            self.assertMeasureAndResultTimings(measure, result)
+
+            cur.execute("SELECT * FROM timings_calls;")
+            result = cur.fetchall()
+
+            self.assertEqual(len(result), 0)
 
     def test_save_with(self):
         measure = fixture.Measure()
@@ -117,7 +158,12 @@ class SQLiteStorageTestCase(TestCase):
             cur.execute("SELECT * FROM timings;")
             result = cur.fetchall()
 
-            self.assertMeasureAndResult(measure, result)
+            self.assertMeasureAndResultTimings(measure, result)
+
+            cur.execute("SELECT * FROM timings_calls;")
+            result = cur.fetchall()
+
+            self.assertMeasureAndResultCalls(measure, result)
 
 class StorageFactoryTestCase(TestCase):
     def setUp(self):
