@@ -63,19 +63,29 @@ class Measure:
             if stat.calls is not None:
                 calls = list()
                 for call in stat.calls:
-                    calls.append(TimingStat(self.timestamp,
-                            str(self.measure_session), self.point_name,
-                            str(call.code), call.callcount, call.reccallcount,
-                            call.totaltime, call.inlinetime, None))
+                    calls.append(TimingStat(
+                            self.timestamp,
+                            str(self.measure_session),
+                            str(self.point_name),
+                            str(call.code),
+                            call.callcount,
+                            call.reccallcount,
+                            call.totaltime * 1000,
+                            call.inlinetime * 1000,
+                            None))
             else:
                 calls = None
 
-            self.timings.append(
-                    TimingStat(
-                            self.timestamp, str(self.measure_session),
-                            self.point_name, str(stat.code),
-                            stat.callcount, stat.reccallcount, stat.totaltime,
-                            stat.inlinetime, calls))
+            self.timings.append(TimingStat(
+                    self.timestamp,
+                    str(self.measure_session),
+                    str(self.point_name),
+                    str(stat.code),
+                    stat.callcount,
+                    stat.reccallcount,
+                    stat.totaltime * 1000,
+                    stat.inlinetime * 1000,
+                    calls))
 
         return self
 

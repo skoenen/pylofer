@@ -11,6 +11,6 @@ if [ $? -eq 0 ]; then
   echo ""
   echo "###### Running Tests in python 3 ######"
   echo ""
-  $python -m unittest
+  $python -m unittest tests
 fi
 
