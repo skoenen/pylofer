@@ -21,6 +21,7 @@ def inject(config):
             return result
 
         paste_httpserver.WSGIHandlerMixin.wsgi_start_response = wsgi_start_response
+        log.info("injected into paste.httpserver.WSGIHandlerMixin.wsgi_start_response")
 
     except ImportError:
         log.info("No `paste` in current context.")

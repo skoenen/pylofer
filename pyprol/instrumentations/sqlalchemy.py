@@ -18,6 +18,7 @@ def inject_into_session_commit(config):
         return result
 
     _session_class.commit = commit
+    log.info("injected into sqlalchemy.orm.session.Session.commit")
 
 def inject_into_session_transaction_commit(config):
     _session = importlib.import_module('sqlalchemy.orm.session')
@@ -32,6 +33,7 @@ def inject_into_session_transaction_commit(config):
         return result
 
     _session_transaction.commit = commit
+    log.info("injected into sqlalchemy.orm.session.SessionTransaction.commit")
 
 def inject_into_session_transaction_close(config):
     _session = importlib.import_module('sqlalchemy.orm.session')
@@ -46,6 +48,7 @@ def inject_into_session_transaction_close(config):
         return result
 
     _session_transaction.close = close
+    log.info("injected into sqlalchemy.orm.session.SessionTransaction.close")
 
 def inject(config):
     try:

@@ -4,9 +4,13 @@ from . import measurement
 
 import importlib
 
+from logging import getLogger
+
 
 __all__ = ['Pyprol', 'inject']
 _pyprol = None
+
+log = getLogger("pyprol.main")
 
 class Pyprol(object):
     def __init__(self, app, config):
@@ -14,6 +18,7 @@ class Pyprol(object):
         self.config = Configuration(config)
 
         self.instrumentations = []
+        log.info("Injecting: {}".format(self.config.instrumentations))
         for instrument in self.config.instrumentations:
             instrument_module = importlib.import_module(instrument)
             instrument_module.inject(self.config)
