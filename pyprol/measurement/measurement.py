@@ -31,6 +31,8 @@ TimingStat = namedtuple(
         "time_total", "time_function", "calls"])
 
 class Measure:
+    time_factor = 1000
+
     def __init__(self,
             measure_session=None,
             measure_point_name=None,
@@ -70,8 +72,8 @@ class Measure:
                             str(call.code),
                             call.callcount,
                             call.reccallcount,
-                            call.totaltime * 1000,
-                            call.inlinetime * 1000,
+                            call.totaltime * time_factor,
+                            call.inlinetime * time_factor,
                             None))
             else:
                 calls = None
@@ -83,8 +85,8 @@ class Measure:
                     str(stat.code),
                     stat.callcount,
                     stat.reccallcount,
-                    stat.totaltime * 1000,
-                    stat.inlinetime * 1000,
+                    stat.totaltime * time_factor,
+                    stat.inlinetime * time_factor,
                     calls))
 
         return self
