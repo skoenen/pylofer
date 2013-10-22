@@ -110,7 +110,8 @@ def enable(measure_point_name):
     global _measure_session
 
     if _measure_session.value is None:
-        _measure_session = _save_manager.Value(str, measure_point_name)
+        _measure_session = _save_manager.Value(str,
+                "{0}_{1}".format(measure_point_name, datetime.utcnow()))
 
     return Measure(str(_measure_session.value), measure_point_name, _save_queue).start()
 
