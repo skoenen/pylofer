@@ -1,7 +1,12 @@
-<h1>Pyprol viewer</h1>
+$def with (navigation)
+$var title: Database path?
+<div class="container">
+    <form action="/overview" method="GET">
+        <div class="input-group">
+            <span class="input-group-addon" for="database">Path to database:</span>
+            <input class="form-control" id="database" type="TEXT" name="database" />
+        </div>
+        <button type="submit" class="btn btn-success btn-block">Next</button>
+    </form>
+</div>
 
-<form action="/overview" method="GET">
-    <input id="database" type="TEXT" name="database" />
-    <label for="database">Path to database:</label>
-    <input type="SUBMIT" value="Next:" />
-</form>

@@ -1,0 +1,36 @@
+$def with (elements)
+$var title: Overview
+<div class="container">
+    <table class="table table-striped">
+        <thead>
+            <th>ID</th>
+            <th>Timestamp</th>
+            <th>Calls</th>
+            <th>Recursive calls</th>
+            <th>Time total</th>
+            <th>Time in function</th>
+            <th>Time per call</th>
+            <th>Time of subcalls</th>
+            <th>Session</th>
+            <th>Measure point</th>
+            <th>Code</th>
+        </thead>
+        <tbody>
+        $for el in elements:
+            <tr
+              onclick="javascript:location.replace('/measure/$el['measure_id']');">
+                <td>$el['measure_id']</td>
+                <td>$el['timestamp']</td>
+                <td>$el['call_count']</td>
+                <td>$el['recursive_call_count']</td>
+                <td>$el['time_total']</td>
+                <td>$el['time_function']</td>
+                <td>$el['time_per_call']</td>
+                <td>$el['time_other']</td>
+                <td>$el['measure_session'][-26:]</td>
+                <td>$el['measure_point']</td>
+                <td>$el['code']</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
