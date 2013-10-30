@@ -1,7 +1,7 @@
 $def with (elements)
 $var title: Overview
 <div class="container">
-    <table class="table table-striped">
+    <table id="table" class="table table-striped">
         <thead>
             <th>ID</th>
             <th>Timestamp</th>
@@ -17,9 +17,10 @@ $var title: Overview
         </thead>
         <tbody>
         $for el in elements:
-            <tr
-              onclick="javascript:location.replace('/measure/$el['measure_id']');">
-                <td>$el['measure_id']</td>
+            <tr>
+                <td onclick="javascript:location.replace('/measure/$el['measure_id']');">
+                    $el['measure_id']
+                </td>
                 <td>$el['timestamp']</td>
                 <td>$el['call_count']</td>
                 <td>$el['recursive_call_count']</td>
@@ -33,4 +34,9 @@ $var title: Overview
             </tr>
         </tbody>
     </table>
+    <script type="text/javascript">
+        $$.ready(function(){
+            $$("#table").tablesorter();
+        })
+    </script>
 </div>

@@ -2,16 +2,22 @@
 
 class Measure:
     def __init__(self, data):
-        self.session = data[0]
-        self.measure_point = data[1]
+        self.id = data['measure_id']
+        self.session = data['measure_session']
+        self.point = data['measure_point']
+        self.code = data['code']
+        self.call_count = data['call_count']
+        self.recursive_call_count = data['recursive_call_count']
+        self.time_total = data['time_total']
+        self.time_function = data['time_function']
 
-        self.load_data(data[2])
+        self.time_per_call = data['time_function'] / data['call_count']
+        self.time_other = data['time_total'] - data['time_function']
 
-    def load_data(self, data):
-        self.timings = data[1:-2]
+        self.subcalls = []
+        self.categories = []
 
-        if data[-1] is not None:
-            self.sub_calls = list()
-            for d in data[-1]:
-                self.sub_calls.append(Measure(d))
+    def add_subcalls(self, data):
+        for sc in data:
+            self.subcalls.append(Measure(sc))
 
